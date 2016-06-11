@@ -5,7 +5,7 @@ import tweepy #https://github.com/tweepy/tweepy
 import csv
 from secrets import *
 
-#Twitter API credentials
+#Twitter API credentials imported from secrets
 consumer_key = C_K
 consumer_secret = C_S
 access_key = A_K
@@ -61,6 +61,7 @@ def get_all_tweets(screen_name):
 def syllable_count(word):
     #shittiest syllable counter in the world
     #literally the worst
+    #fails on soooooooooooooo many words oh well.
     count = 0
     vowels = 'aeiouy'
     word = word.lower().strip(".:;?!")
@@ -77,31 +78,49 @@ def syllable_count(word):
         count+=1
     if count == 0:
         count +=1
-    return count    
+    return count
 
+def find_haiku_sentence(sentence):
+    syl_count = 0
+    exceptions = ['\n',' ','!',':',';','?','!','']
+    words = sentence.split(' ')
+    for word in words:
+        if word in exceptions:
+            continue
+        syl_count += syllable_count(word)
+    print syl_count
+    if syl_count == 5:
+        return 1
+    elif syl_count == 7:
+        return 2
+    else:
+        return 0
+    
 def store_haiku_sentences(screen_name):
     #store5 = []
     #store7 = []
-    exceptions = ['\n',' ','!',':',';','?','!','']
     with open('%s_tweets.csv' % screen_name, 'r') as f:
         reader = csv.reader(f)
         for row in reader:
-            sentences = row[2].split('.')
-            #sentences = [k.split('\n') for k in sentences]
-            for sentence in sentences:
-                print sentence
-                syl_count = 0
-                words = sentence.split(' ')
-                for word in words:
-                    if word in exceptions:
-                        continue
-                    syl_count += syllable_count(word)
-                print syl_count
-
+            lines = row[2].split('\n')
+            for line in lines:
+                sentences = line.split('.')
+                for sentence in sentences:
+                    print sentence                    
+                    result = find_haiku_sentence(sentence)
+                    if result == 1:
+                        with open('5_syl.csv', 'a') as five:
+                            writer = csv.writer(five)
+                            writer.writerow([sentence])
+                    elif result == 2:
+                        with open('7_syl.csv', 'a') as seven:
+                            writer = csv.writer(seven)
+                            writer.writerow([sentence])
     
 if __name__ == '__main__':
     #pass in the username of the account you want to download
     screen_name = "shitty_haiku_nz"
     #get_all_tweets(screen_name)
     store_haiku_sentences(screen_name)
-    #print syllable_count()
+    #print syllable_count("barely")
+    #print CountSyllables("barely")
