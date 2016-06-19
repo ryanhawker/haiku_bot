@@ -11,15 +11,16 @@ consumer_secret = C_S
 access_key = A_K
 access_secret = A_S
 
-
-def get_all_tweets(screen_name):
-    #Twitter only allows access to a users most recent 3240 tweets with this method
-    
+def initTwitterConnection():
     #authorize twitter, initialize tweepy
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_key, access_secret)
     api = tweepy.API(auth)
+    return api
     
+def get_all_tweets(screen_name, api):
+    #Twitter only allows access to a users most recent 3240 tweets with this method
+
     #initialize a list to hold all the tweepy Tweets
     alltweets = []    
     
@@ -58,6 +59,9 @@ def get_all_tweets(screen_name):
     
     pass
 
+def postHaiku(haiku, api):
+    api.update_status(status = haiku)
+
 def syllable_count(word):
     #shittiest syllable counter in the world
     #literally the worst
@@ -84,6 +88,9 @@ def find_haiku_sentence(sentence):
     syl_count = 0
     exceptions = ['\n',' ','!',':',';','?','!','']
     words = sentence.split(' ')
+    if '@' in sentence or 'http' in sentence or 'co/' in sentence:
+        return 0
+        
     for word in words:
         if word in exceptions:
             continue
@@ -116,11 +123,26 @@ def store_haiku_sentences(screen_name):
                         with open('7_syl.csv', 'a') as seven:
                             writer = csv.writer(seven)
                             writer.writerow([sentence])
-    
+ 
+def buildHaiku():
+    #haiku = ""
+    five = open('5_syl.csv', 'r')
+    seven = open('7_syl.csv', 'r')
+    r_five = csv.reader(five)
+    r_seven = csv.reader(seven)
+    haiku = ""
+    haiku += r_five.next()[0] + '\n'
+    haiku += r_seven.next()[0] + '\n'
+    haiku += r_five.next()[0] 
+    return haiku
+        
 if __name__ == '__main__':
     #pass in the username of the account you want to download
-    screen_name = "shitty_haiku_nz"
-    #get_all_tweets(screen_name)
-    store_haiku_sentences(screen_name)
+    api = initTwitterConnection()
+    screen_name = "SwiftOnSecurity"
+    #get_all_tweets(screen_name, api)
+    #store_haiku_sentences(screen_name)
+    haiku = buildHaiku()
+    postHaiku(haiku, api)
     #print syllable_count("barely")
     #print CountSyllables("barely")
